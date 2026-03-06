@@ -1,0 +1,15 @@
+<h2>支出入力</h2>
+<input type="number" id="expense">
+<button onclick="addExpense()">追加</button>
+
+<p id="total">合計: 0円</p>
+
+<script>
+let total = 0;
+
+function addExpense(){
+  let value = Number(document.getElementById("expense").value);
+  total += value;
+  document.getElementById("total").innerText = "合計: " + total + "円";
+}
+</script>
