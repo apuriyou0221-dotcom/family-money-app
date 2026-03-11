@@ -2,6 +2,7 @@
 
 <button id="expenseBtn">支出入力</button>
 <button id="incomeBtn">収入入力</button>
+<button id="resetBtn">リセット</button>
 
 <br><br>
 
@@ -63,10 +64,7 @@ function addAmount() {
   document.getElementById("amountInput").value = "";
   document.getElementById("amountInput").focus();
 }
-</script>
-<button id="resetBtn">リセット</button>
 
-<script>
 document.getElementById("resetBtn").addEventListener("click", () => {
   if(confirm("本当にリセットしますか？")) {
     totalExpense = 0;
