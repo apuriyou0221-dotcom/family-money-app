@@ -1,15 +1,66 @@
-<h2>支出入力</h2>
-<input type="number" id="expense">
-<button onclick="addExpense()">追加</button>
+<h2>家計管理アプリ</h2>
 
-<p id="total">合計: 0円</p>
+<button id="expenseBtn">支出入力</button>
+<button id="incomeBtn">収入入力</button>
+
+<br><br>
+
+<input type="number" id="amountInput" placeholder="金額を入力">
+<button onclick="addAmount()">追加</button>
+
+<h3>支出リスト</h3>
+<ul id="expenseList"></ul>
+
+<p>貯金: <span id="savings">0</span>円</p>
+<p>使えるお金: <span id="available">0</span>円</p>
 
 <script>
-let total = 0;
+let isExpense = true; // 初期状態は支出
+let total = 0;        // 支出合計
+let savings = 0;      // 貯金
+let available = 0;    // 使えるお金
 
-function addExpense(){
-  let value = Number(document.getElementById("expense").value);
-  total += value;
-  document.getElementById("total").innerText = "合計: " + total + "円";
+const expenseBtn = document.getElementById("expenseBtn");
+const incomeBtn = document.getElementById("incomeBtn");
+
+expenseBtn.addEventListener("click", () => {
+  isExpense = true;
+  document.getElementById("amountInput").placeholder = "支出金額を入力";
+});
+
+incomeBtn.addEventListener("click", () => {
+  isExpense = false;
+  document.getElementById("amountInput").placeholder = "収入金額を入力";
+});
+
+function addAmount() {
+  const value = Number(document.getElementById("amountInput").value);
+  if(isNaN(value) || value <= 0){
+    alert("正しい金額を入力してください");
+    return;
+  }
+
+  if(isExpense){
+    // 支出処理
+    total += value;
+    available -= value;
+    if(available < 0) available = 0;
+
+    const li = document.createElement("li");
+    li.textContent = value + "円";
+    document.getElementById("expenseList").appendChild(li);
+
+  } else {
+    // 収入処理
+    savings += value;
+    available += value;
+  }
+
+  // 表示更新
+  document.getElementById("savings").innerText = savings;
+  document.getElementById("available").innerText = available;
+
+  document.getElementById("amountInput").value = "";
+  document.getElementById("amountInput").focus();
 }
 </script>
