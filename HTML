@@ -64,3 +64,24 @@ function addAmount() {
   document.getElementById("amountInput").focus();
 }
 </script>
+<button id="resetBtn">リセット</button>
+
+<script>
+document.getElementById("resetBtn").addEventListener("click", () => {
+  if(confirm("本当にリセットしますか？")) {
+    totalExpense = 0;
+    savings = 0;
+    available = 0;
+
+    // HTML更新
+    document.getElementById("totalExpense").innerText = "¥0";
+    document.getElementById("savings").innerText = "¥0";
+    document.getElementById("expenseList").innerHTML = "";
+
+    // ローカルストレージ削除
+    localStorage.removeItem("totalExpense");
+    localStorage.removeItem("savings");
+    localStorage.removeItem("available");
+  }
+});
+</script>
