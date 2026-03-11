@@ -29,6 +29,11 @@ input{
   font-size:16px;
   width:150px;
   text-align:center;
+  margin:5px 0;
+}
+
+#expenseList li{
+  margin:5px 0;
 }
 </style>
 </head>
@@ -53,6 +58,8 @@ input{
 <button id="expenseBtn">支出金額</button>
 <br><br>
 <input type="number" id="amountInput" placeholder="金額を入力">
+<input type="text" id="tagInput" placeholder="メモ・タグ">
+<br>
 <button id="addBtn">追加</button>
 <br><br>
 <button id="resetBtn">リセット</button>
@@ -69,6 +76,10 @@ let available = 0;
 if(localStorage.getItem("totalExpense")) totalExpense = Number(localStorage.getItem("totalExpense"));
 if(localStorage.getItem("savings")) savings = Number(localStorage.getItem("savings"));
 if(localStorage.getItem("available")) available = Number(localStorage.getItem("available"));
+if(localStorage.getItem("expenseItems")) {
+  const items = JSON.parse(localStorage.getItem("expenseItems"));
+  items.forEach(item => addExpenseListItem(item.value, item.date, item.tag));
+}
 
 // HTMLに反映
 document.getElementById("totalExpense").innerText = "¥" + totalExpense;
@@ -88,10 +99,15 @@ document.getElementById("incomeBtn").addEventListener("click", () => {
 // 追加ボタン処理
 document.getElementById("addBtn").addEventListener("click", () => {
   const value = Number(document.getElementById("amountInput").value);
+  const tag = document.getElementById("tagInput").value || "";
+
   if(isNaN(value) || value <= 0){
     alert("正しい金額を入力してください");
     return;
   }
+
+  const today = new Date();
+  const dateStr = today.getFullYear() + "/" + (today.getMonth()+1) + "/" + today.getDate();
 
   if(isExpense){
     // 支出処理
@@ -99,10 +115,11 @@ document.getElementById("addBtn").addEventListener("click", () => {
     available -= value;
     if(available < 0) available = 0;
 
-    // リストに追加
-    const li = document.createElement("li");
-    li.textContent = "¥" + value;
-    document.getElementById("expenseList").appendChild(li);
+    addExpenseListItem(value, dateStr, tag);
+
+    // ローカルストレージに支出リスト保存
+    saveExpenseItem(value, dateStr, tag);
+
   } else {
     // 収入処理
     savings += value;
@@ -120,8 +137,26 @@ document.getElementById("addBtn").addEventListener("click", () => {
 
   // 入力欄クリア
   document.getElementById("amountInput").value = "";
+  document.getElementById("tagInput").value = "";
   document.getElementById("amountInput").focus();
 });
+
+// 支出リストに追加する関数
+function addExpenseListItem(value, date, tag){
+  const li = document.createElement("li");
+  li.textContent = `¥${value} - ${date}` + (tag ? ` - ${tag}` : "");
+  document.getElementById("expenseList").appendChild(li);
+}
+
+// 支出リストをローカル保存
+function saveExpenseItem(value, date, tag){
+  let items = [];
+  if(localStorage.getItem("expenseItems")){
+    items = JSON.parse(localStorage.getItem("expenseItems"));
+  }
+  items.push({value, date, tag});
+  localStorage.setItem("expenseItems", JSON.stringify(items));
+}
 
 // リセットボタン処理
 document.getElementById("resetBtn").addEventListener("click", () => {
@@ -139,6 +174,7 @@ document.getElementById("resetBtn").addEventListener("click", () => {
     localStorage.removeItem("totalExpense");
     localStorage.removeItem("savings");
     localStorage.removeItem("available");
+    localStorage.removeItem("expenseItems");
   }
 });
 </script>
