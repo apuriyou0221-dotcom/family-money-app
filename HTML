@@ -35,6 +35,11 @@ input{
 #expenseList li{
   margin:5px 0;
 }
+
+.tag-food{color:green;}
+.tag-transport{color:blue;}
+.tag-entertain{color:purple;}
+.tag-other{color:black;}
 </style>
 </head>
 
@@ -53,12 +58,17 @@ input{
 <p id="savings">¥0</p>
 </div>
 
+<div class="card">
+<h2>使えるお金</h2>
+<p id="available">¥0</p>
+</div>
+
 <div>
 <button id="incomeBtn">収入金額</button>
 <button id="expenseBtn">支出金額</button>
 <br><br>
 <input type="number" id="amountInput" placeholder="金額を入力">
-<input type="text" id="tagInput" placeholder="メモ・タグ">
+<input type="text" id="tagInput" placeholder="タグ（例: food, transport）">
 <br>
 <button id="addBtn">追加</button>
 <br><br>
@@ -72,18 +82,27 @@ let totalExpense = 0;
 let savings = 0;
 let available = 0;
 
-// ローカルストレージから読み込み
-if(localStorage.getItem("totalExpense")) totalExpense = Number(localStorage.getItem("totalExpense"));
-if(localStorage.getItem("savings")) savings = Number(localStorage.getItem("savings"));
-if(localStorage.getItem("available")) available = Number(localStorage.getItem("available"));
-if(localStorage.getItem("expenseItems")) {
-  const items = JSON.parse(localStorage.getItem("expenseItems"));
-  items.forEach(item => addExpenseListItem(item.value, item.date, item.tag));
+// ローカルストレージ安全読み込み
+try {
+  totalExpense = Number(localStorage.getItem("totalExpense")) || 0;
+  savings = Number(localStorage.getItem("savings")) || 0;
+  available = Number(localStorage.getItem("available")) || 0;
+
+  if(localStorage.getItem("expenseItems")){
+    const items = JSON.parse(localStorage.getItem("expenseItems"));
+    if(Array.isArray(items)){
+      items.forEach(item => addExpenseListItem(item.value, item.date, item.tag));
+    }
+  }
+} catch(e){
+  console.log("ローカルストレージ読み込みエラー:", e);
+  localStorage.clear(); // 安全のためクリア
 }
 
 // HTMLに反映
 document.getElementById("totalExpense").innerText = "¥" + totalExpense;
 document.getElementById("savings").innerText = "¥" + savings;
+document.getElementById("available").innerText = "¥" + available;
 
 // 支出／収入切替
 document.getElementById("expenseBtn").addEventListener("click", () => {
@@ -99,7 +118,7 @@ document.getElementById("incomeBtn").addEventListener("click", () => {
 // 追加ボタン処理
 document.getElementById("addBtn").addEventListener("click", () => {
   const value = Number(document.getElementById("amountInput").value);
-  const tag = document.getElementById("tagInput").value || "";
+  const tag = document.getElementById("tagInput").value.trim() || "other";
 
   if(isNaN(value) || value <= 0){
     alert("正しい金額を入力してください");
@@ -110,18 +129,13 @@ document.getElementById("addBtn").addEventListener("click", () => {
   const dateStr = today.getFullYear() + "/" + (today.getMonth()+1) + "/" + today.getDate();
 
   if(isExpense){
-    // 支出処理
     totalExpense += value;
     available -= value;
     if(available < 0) available = 0;
 
     addExpenseListItem(value, dateStr, tag);
-
-    // ローカルストレージに支出リスト保存
     saveExpenseItem(value, dateStr, tag);
-
   } else {
-    // 収入処理
     savings += value;
     available += value;
   }
@@ -129,48 +143,44 @@ document.getElementById("addBtn").addEventListener("click", () => {
   // 表示更新
   document.getElementById("totalExpense").innerText = "¥" + totalExpense;
   document.getElementById("savings").innerText = "¥" + savings;
+  document.getElementById("available").innerText = "¥" + available;
 
-  // ローカルストレージに保存
-  localStorage.setItem("totalExpense", totalExpense);
-  localStorage.setItem("savings", savings);
-  localStorage.setItem("available", available);
-
-  // 入力欄クリア
   document.getElementById("amountInput").value = "";
   document.getElementById("tagInput").value = "";
   document.getElementById("amountInput").focus();
+
 });
 
-// 支出リストに追加する関数
+// 支出リストに追加する関数（タグ別クラス付き）
 function addExpenseListItem(value, date, tag){
   const li = document.createElement("li");
-  li.textContent = `¥${value} - ${date}` + (tag ? ` - ${tag}` : "");
+  li.textContent = `¥${value} - ${date} - ${tag}`;
+  li.className = "tag-" + tag.toLowerCase();
   document.getElementById("expenseList").appendChild(li);
 }
 
-// 支出リストをローカル保存
+// ローカル保存
 function saveExpenseItem(value, date, tag){
   let items = [];
-  if(localStorage.getItem("expenseItems")){
-    items = JSON.parse(localStorage.getItem("expenseItems"));
-  }
+  try{
+    items = JSON.parse(localStorage.getItem("expenseItems")) || [];
+  } catch(e){ items = []; }
   items.push({value, date, tag});
   localStorage.setItem("expenseItems", JSON.stringify(items));
 }
 
-// リセットボタン処理
+// リセットボタン
 document.getElementById("resetBtn").addEventListener("click", () => {
   if(confirm("本当にリセットしますか？")){
     totalExpense = 0;
     savings = 0;
     available = 0;
 
-    // 表示更新
     document.getElementById("totalExpense").innerText = "¥0";
     document.getElementById("savings").innerText = "¥0";
+    document.getElementById("available").innerText = "¥0";
     document.getElementById("expenseList").innerHTML = "";
 
-    // ローカルストレージ削除
     localStorage.removeItem("totalExpense");
     localStorage.removeItem("savings");
     localStorage.removeItem("available");
