@@ -5,22 +5,30 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 body{
-font-family:sans-serif;
-text-align:center;
-background:#f5f5f5;
+  font-family:sans-serif;
+  text-align:center;
+  background:#f5f5f5;
 }
 
 .card{
-background:white;
-padding:20px;
-margin:20px;
-border-radius:10px;
-box-shadow:0 2px 10px rgba(0,0,0,0.1);
+  background:white;
+  padding:20px;
+  margin:20px;
+  border-radius:10px;
+  box-shadow:0 2px 10px rgba(0,0,0,0.1);
 }
 
 button{
-padding:10px 20px;
-font-size:16px;
+  padding:10px 20px;
+  font-size:16px;
+  margin:5px;
+}
+
+input{
+  padding:10px;
+  font-size:16px;
+  width:150px;
+  text-align:center;
 }
 </style>
 </head>
@@ -31,16 +39,87 @@ font-size:16px;
 
 <div class="card">
 <h2>今月の支出</h2>
-<p>¥0</p>
+<p id="totalExpense">¥0</p>
+<ul id="expenseList"></ul>
 </div>
 
 <div class="card">
 <h2>貯金</h2>
-<p>¥0</p>
+<p id="savings">¥0</p>
 </div>
 
-<button>収入金額</button>
-<button>支出金額</button>
+<div>
+<button id="incomeBtn">収入金額</button>
+<button id="expenseBtn">支出金額</button>
+<br><br>
+<input type="number" id="amountInput" placeholder="金額を入力">
+<button id="addBtn">追加</button>
+</div>
+
+<script>
+// 初期設定
+let isExpense = true;
+let totalExpense = 0;
+let savings = 0;
+let available = 0;
+
+// ローカルストレージから読み込み
+if(localStorage.getItem("totalExpense")) totalExpense = Number(localStorage.getItem("totalExpense"));
+if(localStorage.getItem("savings")) savings = Number(localStorage.getItem("savings"));
+if(localStorage.getItem("available")) available = Number(localStorage.getItem("available"));
+
+// HTML更新
+document.getElementById("totalExpense").innerText = "¥" + totalExpense;
+document.getElementById("savings").innerText = "¥" + savings;
+
+// 支出／収入切替
+document.getElementById("expenseBtn").addEventListener("click", () => {
+  isExpense = true;
+  document.getElementById("amountInput").placeholder = "支出金額を入力";
+});
+
+document.getElementById("incomeBtn").addEventListener("click", () => {
+  isExpense = false;
+  document.getElementById("amountInput").placeholder = "収入金額を入力";
+});
+
+// 追加ボタン処理
+document.getElementById("addBtn").addEventListener("click", () => {
+  const value = Number(document.getElementById("amountInput").value);
+  if(isNaN(value) || value <= 0){
+    alert("正しい金額を入力してください");
+    return;
+  }
+
+  if(isExpense){
+    // 支出処理
+    totalExpense += value;
+    available -= value;
+    if(available < 0) available = 0;
+
+    // リストに追加
+    const li = document.createElement("li");
+    li.textContent = "¥" + value;
+    document.getElementById("expenseList").appendChild(li);
+  } else {
+    // 収入処理
+    savings += value;
+    available += value;
+  }
+
+  // 表示更新
+  document.getElementById("totalExpense").innerText = "¥" + totalExpense;
+  document.getElementById("savings").innerText = "¥" + savings;
+
+  // ローカルストレージに保存
+  localStorage.setItem("totalExpense", totalExpense);
+  localStorage.setItem("savings", savings);
+  localStorage.setItem("available", available);
+
+  document.getElementById("amountInput").value = "";
+  document.getElementById("amountInput").focus();
+});
+</script>
 
 </body>
 </html>
